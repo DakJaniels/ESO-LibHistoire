@@ -1,6 +1,6 @@
--- LibHistoire & its files © sirinsidiator                      --
--- Distributed under The Artistic License 2.0 (see LICENSE)     --
-------------------------------------------------------------------
+-- SPDX-FileCopyrightText: 2025 sirinsidiator
+--
+-- SPDX-License-Identifier: Artistic-2.0
 
 --- @module "guildHistoryCache.GuildHistoryLegacyEventListener"
 --- @module "guildHistoryCache.GuildHistoryEventProcessor"
@@ -18,6 +18,13 @@ local logger = internal.logger
 --- @return boolean isReady True if the library is ready to be used, false otherwise.
 function lib:IsReady()
     return internal.initialized
+end
+
+--- This function returns false while the guild history system is unavailable. 
+--- It's currently based on hardcoded data, which may not be 100% accurate and will require the library to be updated by the user.
+--- @return boolean isDisabled True if the guild history system is disabled, false otherwise.
+function lib:IsGuildHistorySystemDisabled()
+    return internal:IsGuildHistorySystemDisabled()
 end
 
 --- A convenience function to execute a callback when the library is ready. When the library is already initialized, the callback will be executed immediately.

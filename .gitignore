@@ -1,5 +1,10 @@
+# SPDX-FileCopyrightText: 2025 sirinsidiator
+#
+# SPDX-License-Identifier: Artistic-2.0
+
 /target
 /temp
 /unused
-.history
 node_modules
+/doc/doc.*
+/doc/*.log

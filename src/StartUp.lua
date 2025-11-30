@@ -1,6 +1,6 @@
--- LibHistoire & its files © sirinsidiator                      --
--- Distributed under The Artistic License 2.0 (see LICENSE)     --
-------------------------------------------------------------------
+-- SPDX-FileCopyrightText: 2025 sirinsidiator
+--
+-- SPDX-License-Identifier: Artistic-2.0
 
 local LIB_IDENTIFIER = "LibHistoire"
 
@@ -97,16 +97,19 @@ function internal:InitializeCaches()
     logger:Verbose("Initializing Caches")
     self.historyAdapter = self.class.GuildHistoryAdapter:New(LibHistoire_GuildHistoryCache, LibHistoire_Settings)
     self.historyCache = self.class.GuildHistoryCache:New(self.historyAdapter, GUILD_HISTORY_MANAGER)
-    SecurePostHook(ZO_GuildHistory_Keyboard, "OnDeferredInitialize", function(history)
-        if self.statusWindow then return end
-        logger:Verbose("Initializing user interface")
-        self.historyAdapter:InitializeDeferred(history, self.historyCache)
-        self.statusTooltip = self.class.GuildHistoryStatusTooltip:New()
-        self.linkedIcon = self.class.GuildHistoryStatusLinkedIcon:New(history, self.historyAdapter, self.statusTooltip)
-        self.statusWindow = self.class.GuildHistoryStatusWindow:New(self.historyAdapter, self.statusTooltip,
-            LibHistoire_Settings.statusWindow)
-        logger:Verbose("User interface initialized")
-    end)
+    if not IsConsoleUI() then
+        SecurePostHook(ZO_GuildHistory_Keyboard, "OnDeferredInitialize", function(history)
+            if self.statusWindow then return end
+            logger:Verbose("Initializing user interface")
+            self.historyAdapter:InitializeDeferred(history, self.historyCache)
+            self.statusTooltip = self.class.GuildHistoryStatusTooltip:New()
+            self.linkedIcon = self.class.GuildHistoryStatusLinkedIcon:New(history, self.historyAdapter,
+                self.statusTooltip)
+            self.statusWindow = self.class.GuildHistoryStatusWindow:New(self.historyAdapter, self.statusTooltip,
+                LibHistoire_Settings.statusWindow)
+            logger:Verbose("User interface initialized")
+        end)
+    end
 
     internal:InitializeQuickNavigation()
     logger:Verbose("Caches initialized")
@@ -201,4 +204,24 @@ function internal:IsGuildStatusVisible(guildId)
     if not cache then return false end
 
     return cache:GetGuildId() == guildId
+end
+
+do
+    -- https://forums.elderscrollsonline.com/en/discussion/682758/guild-history-turned-off-sept-4
+    local ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_PC = 1757925000 -- Mon Sep 15 2025 08:30:00 GMT+0000
+    local ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_CONSOLE = 1758011400 -- Tue Sep 16 2025 08:30:00 GMT+0000
+    local ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME = {
+        ["NA Megaserver"] = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_PC,
+        ["EU Megaserver"] = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_PC,
+        ["XB1live"] = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_CONSOLE,
+        ["PS4live"] = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_CONSOLE,
+        ["XB1live-eu"] = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_CONSOLE,
+        ["PS4live-eu"] = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME_CONSOLE,
+    }
+    function internal:IsGuildHistorySystemDisabled()
+        local world = GetWorldName()
+        local reenableTime = ESTIMATED_GUILD_HISTORY_RE_ENABLE_TIME[world]
+        if not reenableTime then return false end
+        return GetTimeStamp() < reenableTime
+    end
 end
